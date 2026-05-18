@@ -1,0 +1,153 @@
+/* src/index.css */
+
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Bebas+Neue&display=swap");
+@import "tailwindcss";
+
+/* =========================================
+   THEME VARIABLES
+========================================= */
+
+:root {
+  /* Fonts */
+  --font-body: "Poppins", sans-serif;
+  --font-heading: "Bebas Neue", sans-serif;
+
+  /* Light Theme */
+  --color-background: #ffffff;
+  --color-foreground: #000000;
+
+  --color-card: #ffffff;
+  --color-card-foreground: #000000;
+
+  --color-primary: #000000;
+  --color-primary-foreground: #ffffff;
+
+  --color-secondary: #f3f3f3;
+  --color-secondary-foreground: #000000;
+
+  --color-muted: #e8e8e8;
+  --color-muted-foreground: #525252;
+
+  --color-accent: #dcdcdc;
+  --color-accent-foreground: #000000;
+
+  --color-border: #e5e5e5;
+
+  --radius: 1rem;
+}
+
+/* =========================================
+   DARK MODE
+========================================= */
+
+.dark {
+  --color-background: #000000;
+  --color-foreground: #ffffff;
+
+  --color-card: #0a0a0a;
+  --color-card-foreground: #ffffff;
+
+  --color-primary: #ffffff;
+  --color-primary-foreground: #000000;
+
+  --color-secondary: #111111;
+  --color-secondary-foreground: #ffffff;
+
+  --color-muted: #171717;
+  --color-muted-foreground: #a3a3a3;
+
+  --color-accent: #1f1f1f;
+  --color-accent-foreground: #ffffff;
+
+  --color-border: #262626;
+}
+
+/* =========================================
+   TAILWIND V4 THEME TOKENS
+========================================= */
+
+@theme {
+  --font-sans: var(--font-body);
+  --font-heading: var(--font-heading);
+
+  --color-background: var(--color-background);
+  --color-foreground: var(--color-foreground);
+
+  --color-card: var(--color-card);
+  --color-card-foreground: var(--color-card-foreground);
+
+  --color-primary: var(--color-primary);
+  --color-primary-foreground: var(--color-primary-foreground);
+
+  --color-secondary: var(--color-secondary);
+  --color-secondary-foreground: var(--color-secondary-foreground);
+
+  --color-muted: var(--color-muted);
+  --color-muted-foreground: var(--color-muted-foreground);
+
+  --color-accent: var(--color-accent);
+  --color-accent-foreground: var(--color-accent-foreground);
+
+  --color-border: var(--color-border);
+
+  --radius-xl: var(--radius);
+}
+
+/* =========================================
+   GLOBAL STYLES
+========================================= */
+
+* {
+  border-color: var(--color-border);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-body);
+  overflow-x: hidden;
+}
+
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+}
+
+/* Headings */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  letter-spacing: 0.05em;
+}
+
+/* Selection */
+
+::selection {
+  background: var(--color-foreground);
+  color: var(--color-background);
+}
+
+/* Scrollbar */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-foreground);
+  border-radius: 999px;
+}
