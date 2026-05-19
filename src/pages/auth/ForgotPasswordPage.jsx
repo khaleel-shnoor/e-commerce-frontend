@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { useToast } from '../../context/ToastContext';
+import { authApi } from '../../lib/api';
 
 export default function ForgotPasswordPage() {
   const { addToast } = useToast();
@@ -12,16 +13,26 @@ export default function ForgotPasswordPage() {
       <p className="text-muted-foreground text-sm mb-8">Enter your email to receive a reset link</p>
       <form
         className="space-y-4"
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
-          addToast('Reset link sent to your email', 'success');
+          const form = new FormData(e.target);
+          try {
+            await authApi.forgotPassword(form.get('email'));
+            addToast('If the email exists, a reset link was sent', 'success');
+          } catch (err) {
+            addToast(err.message || 'Request failed', 'error');
+          }
         }}
       >
         <Input label="Email" name="email" type="email" required />
-        <Button type="submit" className="w-full">Send Reset Link</Button>
+        <Button type="submit" className="w-full">
+          Send Reset Link
+        </Button>
       </form>
       <p className="text-sm text-center mt-6">
-        <Link to="/login" className="hover:underline">Back to login</Link>
+        <Link to="/login" className="hover:underline">
+          Back to login
+        </Link>
       </p>
     </div>
   );

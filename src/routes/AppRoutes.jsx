@@ -20,6 +20,7 @@ import RegisterPage from '../pages/auth/RegisterPage';
 import ForgotPasswordPage from '../pages/auth/ForgotPasswordPage';
 import OtpPage from '../pages/auth/OtpPage';
 import ResetPasswordPage from '../pages/auth/ResetPasswordPage';
+import OAuthCallbackPage from '../pages/auth/OAuthCallbackPage';
 
 import CustomerDashboard from '../dashboard/CustomerDashboard';
 import CustomerOrders from '../dashboard/CustomerOrders';
@@ -85,6 +86,8 @@ export function AppRoutes() {
         <Route path="terms" element={<ContentPage type="terms" />} />
         <Route path="privacy" element={<ContentPage type="privacy" />} />
       </Route>
+
+      <Route path="auth/callback" element={<OAuthCallbackPage />} />
 
       <Route element={<AuthLayout />}>
         <Route path="login" element={<LoginPage />} />

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { Menu, X, Search, ShoppingBag, Heart, User, Sun, Moon } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useTheme } from '../../context/ThemeContext';
 import { Button } from '../ui/Button';
@@ -21,7 +22,11 @@ export function Navbar() {
   const [query, setQuery] = useState('');
   const { itemCount } = useCart();
   const { isDark, toggleTheme } = useTheme();
+  const { isAuthenticated, role, logout } = useAuth();
   const navigate = useNavigate();
+
+  const accountPath =
+    role === 'admin' ? '/admin' : role === 'seller' ? '/seller' : '/account';
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -89,12 +94,24 @@ export function Navbar() {
                 </span>
               )}
             </Link>
-            <Link to="/login" className="hidden sm:block">
-              <Button variant="outline" size="sm">
+            {isAuthenticated ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="hidden sm:flex"
+                onClick={() => navigate(accountPath)}
+              >
                 <User className="h-4 w-4 mr-1" />
                 Account
               </Button>
-            </Link>
+            ) : (
+              <Link to="/login" className="hidden sm:block">
+                <Button variant="outline" size="sm">
+                  <User className="h-4 w-4 mr-1" />
+                  Sign In
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </header>
@@ -111,9 +128,32 @@ export function Navbar() {
               {link.label}
             </NavLink>
           ))}
-          <Link to="/login" onClick={() => setMobileOpen(false)} className="px-4 py-3 rounded-xl hover:bg-secondary">
-            Account
-          </Link>
+          {isAuthenticated ? (
+            <>
+              <Link
+                to={accountPath}
+                onClick={() => setMobileOpen(false)}
+                className="px-4 py-3 rounded-xl hover:bg-secondary"
+              >
+                Dashboard
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  logout();
+                  setMobileOpen(false);
+                  navigate('/');
+                }}
+                className="px-4 py-3 rounded-xl hover:bg-secondary text-left w-full"
+              >
+                Sign Out
+              </button>
+            </>
+          ) : (
+            <Link to="/login" onClick={() => setMobileOpen(false)} className="px-4 py-3 rounded-xl hover:bg-secondary">
+              Sign In
+            </Link>
+          )}
         </nav>
       </Drawer>
 
