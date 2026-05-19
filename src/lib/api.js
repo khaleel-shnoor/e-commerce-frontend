@@ -113,7 +113,7 @@ export const authApi = {
   forgotPassword: (email) =>
     apiRequest('/auth/forgot-password', {
       method: 'POST',
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email: String(email).trim().toLowerCase() }),
       auth: false,
     }),
   resetPassword: (body) =>
@@ -144,5 +144,22 @@ export const profileApi = {
 export function getGoogleLoginUrl() {
   return `${API_BASE}/auth/google/login`;
 }
+
+export const adminApi = {
+  listUsers: (params = {}) => {
+    const q = new URLSearchParams();
+    if (params.search) q.set('search', params.search);
+    if (params.role) q.set('role', params.role);
+    const query = q.toString();
+    return apiRequest(`/admin/users${query ? `?${query}` : ''}`);
+  },
+  listSellers: (params = {}) => {
+    const q = new URLSearchParams();
+    if (params.search) q.set('search', params.search);
+    if (params.status) q.set('status', params.status);
+    const query = q.toString();
+    return apiRequest(`/admin/sellers${query ? `?${query}` : ''}`);
+  },
+};
 
 export { API_BASE, API_URL };

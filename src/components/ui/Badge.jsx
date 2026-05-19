@@ -33,6 +33,9 @@ export function StatusBadge({ status }) {
     published: 'bg-foreground text-background',
     draft: 'bg-muted text-muted-foreground',
     inactive: 'bg-muted text-muted-foreground',
+    approved: 'bg-foreground text-background',
+    rejected: 'bg-muted text-muted-foreground line-through',
+    suspended: 'bg-muted text-muted-foreground',
   };
 
   return (
