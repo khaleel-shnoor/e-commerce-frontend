@@ -1,7 +1,8 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Zap } from 'lucide-react';
-import { products } from '../data/products';
-import { categories } from '../data/categories';
+import { productsApi, categoriesApi } from '../lib/api';
+import { mapApiProduct } from '../lib/product-mapper';
 import { testimonials } from '../data/reviews';
 import { brandLogos } from '../data/analytics';
 import { placeholderImage } from '../lib/utils';
@@ -15,10 +16,24 @@ import { ProductCardSkeleton } from '../components/common/Skeleton';
 
 export default function HomePage() {
   const loading = usePageLoading();
-  const featured = products.filter((p) => p.isFeatured).slice(0, 4);
-  const trending = products.filter((p) => p.isTrending).slice(0, 4);
-  const newArrivals = products.filter((p) => p.isNew).slice(0, 4);
-  const flashSale = products.filter((p) => p.isFlashSale).slice(0, 4);
+  const [shopProducts, setShopProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    productsApi
+      .list({ limit: 16, sort: 'newest' })
+      .then((data) => setShopProducts((data.items || []).map(mapApiProduct)))
+      .catch(() => setShopProducts([]));
+    categoriesApi
+      .list()
+      .then((data) => setCategories(data.items || []))
+      .catch(() => setCategories([]));
+  }, []);
+
+  const featured = shopProducts.slice(0, 4);
+  const trending = shopProducts.slice(4, 8);
+  const newArrivals = shopProducts.slice(8, 12);
+  const flashSale = shopProducts.filter((p) => p.isFlashSale).slice(0, 4);
 
   return (
   <>
@@ -66,7 +81,14 @@ export default function HomePage() {
           <SectionHeader title="Categories" subtitle="Explore" actionLabel="All Categories" actionHref="/categories" />
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {categories.slice(0, 6).map((c) => (
-              <CategoryCard key={c.id} category={c} />
+              <CategoryCard
+                key={c.id}
+                category={{
+                  ...c,
+                  image: placeholderImage(400, 500, c.name),
+                  productCount: '—',
+                }}
+              />
             ))}
           </div>
         </div>

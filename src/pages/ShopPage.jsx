@@ -1,45 +1,71 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { SlidersHorizontal } from 'lucide-react';
-import { products } from '../data/products';
-import { categories } from '../data/categories';
 import { ProductCard } from '../components/product/ProductCard';
 import { PageWrapper } from '../components/common/PageWrapper';
 import { FilterChips, Filters } from '../components/common/Filters';
 import { Pagination } from '../components/common/Pagination';
-import { usePageLoading } from '../hooks/usePageLoading';
-import { usePagination } from '../hooks/usePagination';
 import { ProductCardSkeleton } from '../components/common/Skeleton';
 import { Button } from '../components/ui/Button';
 import { Drawer } from '../components/ui/Drawer';
-
+import { productsApi, categoriesApi } from '../lib/api';
+import { mapApiProduct } from '../lib/product-mapper';
 const sortOptions = [
-  { value: 'featured', label: 'Featured' },
+  { value: 'newest', label: 'Newest' },
   { value: 'price-asc', label: 'Price: Low to High' },
   { value: 'price-desc', label: 'Price: High to Low' },
-  { value: 'newest', label: 'Newest' },
+  { value: 'name', label: 'Name' },
 ];
 
+const PAGE_SIZE = 12;
+
 export default function ShopPage() {
-  const [params] = useSearchParams();
-  const category = params.get('category');
-  const filter = params.get('filter');
-  const [sort, setSort] = useState('featured');
+  const [params, setParams] = useSearchParams();
+  const categoryParam = params.get('category');
+  const [sort, setSort] = useState('newest');
   const [filterOpen, setFilterOpen] = useState(false);
-  const loading = usePageLoading();
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
 
-  const filtered = useMemo(() => {
-    let list = [...products];
-    if (category) list = list.filter((p) => p.categoryId === category);
-    if (filter === 'new') list = list.filter((p) => p.isNew);
-    if (filter === 'sale') list = list.filter((p) => p.isFlashSale);
-    if (sort === 'price-asc') list.sort((a, b) => a.price - b.price);
-    if (sort === 'price-desc') list.sort((a, b) => b.price - a.price);
-    if (sort === 'newest') list.sort((a, b) => b.id - a.id);
-    return list;
-  }, [category, filter, sort]);
+  const categoryId = useMemo(() => {
+    if (!categoryParam) return null;
+    const bySlug = categories.find((c) => c.slug === categoryParam);
+    const byId = categories.find((c) => c.id === categoryParam);
+    return (bySlug || byId)?.id || categoryParam;
+  }, [categoryParam, categories]);
 
-  const { page, totalPages, paginatedItems, goToPage } = usePagination(filtered, 8);
+  useEffect(() => {
+    categoriesApi
+      .list()
+      .then((data) => setCategories(data.items || []))
+      .catch(() => setCategories([]));
+  }, []);
+
+  useEffect(() => {
+    setLoading(true);
+    const offset = (page - 1) * PAGE_SIZE;
+    productsApi
+      .list({
+        category_id: categoryId || undefined,
+        sort,
+        limit: PAGE_SIZE,
+        offset,
+      })
+      .then((data) => {
+        setProducts((data.items || []).map(mapApiProduct));
+        setTotal(data.total || 0);
+      })
+      .catch(() => {
+        setProducts([]);
+        setTotal(0);
+      })
+      .finally(() => setLoading(false));
+  }, [categoryId, sort, page]);
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const filterConfig = [
     {
@@ -50,57 +76,73 @@ export default function ShopPage() {
     },
   ];
 
+  const setCategory = (val) => {
+    setPage(1);
+    const next = new URLSearchParams(params);
+    if (val) next.set('category', val);
+    else next.delete('category');
+    setParams(next);
+  };
+
   return (
-    <PageWrapper
-      title="Shop"
-      subtitle="Collection"
-      breadcrumbs={[{ label: 'Shop' }]}
-      loading={loading}
-    >
+    <PageWrapper title="Shop" subtitle="Collection" breadcrumbs={[{ label: 'Shop' }]} loading={false}>
       <div className="flex flex-col lg:flex-row gap-8">
         <aside className="hidden lg:block w-56 shrink-0">
           <Filters
             filters={filterConfig}
-            onChange={(name, val) => name === 'sort' && setSort(val)}
+            onChange={(name, val) => {
+              if (name === 'sort') {
+                setSort(val);
+                setPage(1);
+              }
+            }}
           />
           <h3 className="font-heading text-sm tracking-wide mt-8 mb-4">Categories</h3>
           <FilterChips
-            options={[{ value: '', label: 'All' }, ...categories.map((c) => ({ value: c.id, label: c.name }))]}
-            active={category || ''}
-            onChange={(val) => {
-              const url = new URL(window.location.href);
-              val ? url.searchParams.set('category', val) : url.searchParams.delete('category');
-              window.history.pushState({}, '', url);
-              window.location.reload();
-            }}
+            options={[
+              { value: '', label: 'All' },
+              ...categories.map((c) => ({ value: c.slug, label: c.name })),
+            ]}
+            active={categoryParam || ''}
+            onChange={setCategory}
           />
         </aside>
 
         <div className="flex-1">
           <div className="flex items-center justify-between mb-6">
-            <p className="text-sm text-muted-foreground">{filtered.length} products</p>
+            <p className="text-sm text-muted-foreground">{total} products</p>
             <Button variant="outline" size="sm" className="lg:hidden" onClick={() => setFilterOpen(true)}>
               <SlidersHorizontal className="h-4 w-4 mr-2" />
               Filters
             </Button>
           </div>
 
-          {paginatedItems.length === 0 ? (
-            <p className="text-center text-muted-foreground py-16">No products match your filters.</p>
+          {products.length === 0 && !loading ? (
+            <p className="text-center text-muted-foreground py-16">
+              No products available yet. Check back soon.
+            </p>
           ) : (
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {loading
                 ? Array.from({ length: 8 }).map((_, i) => <ProductCardSkeleton key={i} />)
-                : paginatedItems.map((p) => <ProductCard key={p.id} product={p} />)}
+                : products.map((p) => <ProductCard key={p.id} product={p} />)}
             </div>
           )}
 
-          <Pagination page={page} totalPages={totalPages} onPageChange={goToPage} className="mt-12" />
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            className="mt-12"
+          />
         </div>
       </div>
 
       <Drawer open={filterOpen} onClose={() => setFilterOpen(false)} title="Filters">
-        <Filters filters={filterConfig} onChange={(name, val) => name === 'sort' && setSort(val)} />
+        <Filters
+          filters={filterConfig}
+          onChange={(name, val) => name === 'sort' && setSort(val)}
+        />
       </Drawer>
     </PageWrapper>
   );

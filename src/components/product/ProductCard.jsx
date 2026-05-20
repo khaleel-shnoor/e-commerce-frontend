@@ -12,7 +12,7 @@ export function ProductCard({ product, className }) {
 
   return (
     <article className={cn('group relative', className)}>
-      <Link to={`/product/${product.slug}`} className="block overflow-hidden rounded-xl border border-border bg-card">
+      <Link to={`/product/${product.id}`} className="block overflow-hidden rounded-xl border border-border bg-card">
         <figure className="relative aspect-[4/5] overflow-hidden bg-secondary">
           <img
             src={product.image}

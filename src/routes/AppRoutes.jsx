@@ -20,6 +20,7 @@ import RegisterPage from '../pages/auth/RegisterPage';
 import ForgotPasswordPage from '../pages/auth/ForgotPasswordPage';
 import OtpPage from '../pages/auth/OtpPage';
 import ResetPasswordPage from '../pages/auth/ResetPasswordPage';
+import VerifyEmailPage from '../pages/auth/VerifyEmailPage';
 import OAuthCallbackPage from '../pages/auth/OAuthCallbackPage';
 
 import CustomerDashboard from '../dashboard/CustomerDashboard';
@@ -94,6 +95,7 @@ export function AppRoutes() {
         <Route path="register" element={<RegisterPage />} />
         <Route path="forgot-password" element={<ForgotPasswordPage />} />
         <Route path="verify-otp" element={<OtpPage />} />
+        <Route path="verify-email" element={<VerifyEmailPage />} />
         <Route path="reset-password" element={<ResetPasswordPage />} />
       </Route>
 

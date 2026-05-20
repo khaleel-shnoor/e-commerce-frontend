@@ -73,27 +73,26 @@ export async function apiRequest(path, options = {}) {
   return parseResponse(response);
 }
 
-/** Multipart upload (e.g. profile avatar) — do not set Content-Type manually. */
-export async function apiUpload(path, formData) {
+/** Multipart upload — do not set Content-Type manually. */
+export async function apiUpload(path, formData, { method = 'POST' } = {}) {
   const headers = new Headers();
   const token = getAccessToken();
   if (token) headers.set('Authorization', `Bearer ${token}`);
 
-  let response = await fetch(`${API_BASE}${path}`, {
-    method: 'POST',
-    body: formData,
-    headers,
-  });
+  const doFetch = () =>
+    fetch(`${API_BASE}${path}`, {
+      method,
+      body: formData,
+      headers,
+    });
+
+  let response = await doFetch();
 
   if (response.status === 401) {
     await refreshAccessToken();
     const newToken = getAccessToken();
     if (newToken) headers.set('Authorization', `Bearer ${newToken}`);
-    response = await fetch(`${API_BASE}${path}`, {
-      method: 'POST',
-      body: formData,
-      headers,
-    });
+    response = await doFetch();
   }
 
   return parseResponse(response);
@@ -128,6 +127,12 @@ export const authApi = {
       body: JSON.stringify({ token }),
       auth: false,
     }),
+  resendVerification: (email) =>
+    apiRequest('/auth/resend-verification', {
+      method: 'POST',
+      body: JSON.stringify({ email: String(email).trim().toLowerCase() }),
+      auth: false,
+    }),
 };
 
 export const profileApi = {
@@ -145,6 +150,38 @@ export function getGoogleLoginUrl() {
   return `${API_BASE}/auth/google/login`;
 }
 
+export const productsApi = {
+  list: (params = {}) => {
+    const q = new URLSearchParams();
+    if (params.search) q.set('search', params.search);
+    if (params.category_id) q.set('category_id', params.category_id);
+    if (params.sort) q.set('sort', params.sort);
+    if (params.limit != null) q.set('limit', String(params.limit));
+    if (params.offset != null) q.set('offset', String(params.offset));
+    const query = q.toString();
+    return apiRequest(`/products${query ? `?${query}` : ''}`, { auth: false });
+  },
+  get: (identifier) => apiRequest(`/products/${identifier}`, { auth: false }),
+};
+
+export const categoriesApi = {
+  list: () => apiRequest('/categories', { auth: false }),
+};
+
+export const sellerProductsApi = {
+  list: (params = {}) => {
+    const q = new URLSearchParams();
+    if (params.search) q.set('search', params.search);
+    if (params.status) q.set('status', params.status);
+    const query = q.toString();
+    return apiRequest(`/seller/products${query ? `?${query}` : ''}`);
+  },
+  get: (id) => apiRequest(`/seller/products/${id}`),
+  create: (formData) => apiUpload('/seller/products', formData),
+  update: (id, formData) => apiUpload(`/seller/products/${id}`, formData, { method: 'PATCH' }),
+  remove: (id) => apiRequest(`/seller/products/${id}`, { method: 'DELETE' }),
+};
+
 export const adminApi = {
   listUsers: (params = {}) => {
     const q = new URLSearchParams();
@@ -160,6 +197,11 @@ export const adminApi = {
     const query = q.toString();
     return apiRequest(`/admin/sellers${query ? `?${query}` : ''}`);
   },
+  updateSellerStatus: (sellerId, status) =>
+    apiRequest(`/admin/sellers/${sellerId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    }),
 };
 
 export { API_BASE, API_URL };

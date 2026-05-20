@@ -34,6 +34,7 @@ export function AuthProvider({ children }) {
       role: primaryRole,
       roles: apiUser.roles,
       is_verified: apiUser.is_verified,
+      seller: apiUser.seller ?? null,
     };
     setUser(mapped);
     setRole(primaryRole);
@@ -84,19 +85,30 @@ export function AuthProvider({ children }) {
     [applyUser],
   );
 
+  // const register = useCallback(
+  //   async ({ email, password, full_name }) => {
+  //     const data = await authApi.register({
+  //       email,
+  //       password,
+  //       full_name,
+  //       role: 'customer',
+  //     });
+  //     setTokens(data.tokens);
+  //     return applyUser(data.user);
+  //   },
+  //   [applyUser],
+  // );
+
   const register = useCallback(
-    async ({ email, password, full_name }) => {
-      const data = await authApi.register({
-        email,
-        password,
-        full_name,
-        role: 'customer',
-      });
-      setTokens(data.tokens);
-      return applyUser(data.user);
-    },
-    [applyUser],
-  );
+  async (payload) => {
+    const data = await authApi.register(payload);
+
+    setTokens(data.tokens);
+
+    return applyUser(data.user);
+  },
+  [applyUser],
+);
 
   const logout = useCallback(async () => {
     const refresh = getRefreshToken();
@@ -110,6 +122,16 @@ export function AuthProvider({ children }) {
     setRole(null);
   }, []);
 
+  const sellerIsActive = useMemo(
+    () =>
+      Boolean(
+        user?.is_verified &&
+          user?.seller &&
+          user.seller.status === 'approved',
+      ),
+    [user],
+  );
+
   const value = useMemo(
     () => ({
       user,
@@ -119,6 +141,7 @@ export function AuthProvider({ children }) {
       isCustomer: role === 'customer',
       isSeller: role === 'seller',
       isAdmin: role === 'admin',
+      sellerIsActive,
       login,
       register,
       logout,
@@ -126,7 +149,7 @@ export function AuthProvider({ children }) {
       applyUser,
       refreshUser: bootstrap,
     }),
-    [user, role, loading, login, register, logout, loginWithTokens, applyUser, bootstrap],
+    [user, role, loading, sellerIsActive, login, register, logout, loginWithTokens, applyUser, bootstrap],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
