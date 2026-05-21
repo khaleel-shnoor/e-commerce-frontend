@@ -202,6 +202,64 @@ export const adminApi = {
       method: 'PATCH',
       body: JSON.stringify({ status }),
     }),
+  analytics: () => apiRequest('/admin/analytics'),
+  listOrders: (params = {}) => {
+    const q = new URLSearchParams();
+    if (params.limit != null) q.set('limit', String(params.limit));
+    if (params.offset != null) q.set('offset', String(params.offset));
+    const query = q.toString();
+    return apiRequest(`/admin/orders${query ? `?${query}` : ''}`);
+  },
+};
+
+export const wishlistApi = {
+  get: () => apiRequest('/customer/wishlist'),
+  toggle: (productId) =>
+    apiRequest(`/customer/wishlist/${productId}`, { method: 'POST' }),
+};
+
+export const cartApi = {
+  get: () => apiRequest('/customer/cart'),
+  add: (productId, quantity = 1) =>
+    apiRequest('/customer/cart', {
+      method: 'POST',
+      body: JSON.stringify({ product_id: productId, quantity }),
+    }),
+  update: (itemId, quantity) =>
+    apiRequest(`/customer/cart/${itemId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ quantity }),
+    }),
+  remove: (itemId) => apiRequest(`/customer/cart/${itemId}`, { method: 'DELETE' }),
+  clear: () => apiRequest('/customer/cart', { method: 'DELETE' }),
+};
+
+export const addressApi = {
+  list: () => apiRequest('/customer/addresses'),
+  create: (body) =>
+    apiRequest('/customer/addresses', { method: 'POST', body: JSON.stringify(body) }),
+  delete: (id) => apiRequest(`/customer/addresses/${id}`, { method: 'DELETE' }),
+};
+
+export const orderApi = {
+  list: () => apiRequest('/customer/orders'),
+  get: (id) => apiRequest(`/customer/orders/${id}`),
+  checkout: (body) =>
+    apiRequest('/customer/orders/checkout', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+};
+
+export const sellerApi = {
+  orders: (params = {}) => {
+    const q = new URLSearchParams();
+    if (params.limit != null) q.set('limit', String(params.limit));
+    if (params.offset != null) q.set('offset', String(params.offset));
+    const query = q.toString();
+    return apiRequest(`/seller/orders${query ? `?${query}` : ''}`);
+  },
+  analytics: () => apiRequest('/seller/analytics'),
 };
 
 export { API_BASE, API_URL };

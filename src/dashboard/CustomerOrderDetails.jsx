@@ -1,77 +1,123 @@
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { PageWrapper } from '../components/common/PageWrapper';
 import { usePageLoading } from '../hooks/usePageLoading';
-import { getOrderById } from '../data/orders';
 import { formatCurrency, formatDate } from '../lib/utils';
 import { StatusBadge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
+import { orderApi } from '../lib/api';
 
 export default function CustomerOrderDetails() {
   const { id } = useParams();
-  const order = getOrderById(id);
-  const loading = usePageLoading();
+  const pageLoading = usePageLoading();
+  const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  if (!order && !loading) {
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    setLoading(true);
+    orderApi.get(id)
+      .then((data) => { if (!cancelled) setOrder(data); })
+      .catch((err) => { if (!cancelled) setError(err.message || 'Order not found'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [id]);
+
+  const isLoading = pageLoading || loading;
+
+  if (!isLoading && (error || !order)) {
     return (
       <PageWrapper title="Order Not Found">
-        <Link to="/account/orders"><Button variant="outline">Back to Orders</Button></Link>
+        <p className="text-muted-foreground mb-4">{error || 'This order does not exist.'}</p>
+        <Link to="/account/orders">
+          <Button variant="outline">Back to Orders</Button>
+        </Link>
       </PageWrapper>
     );
   }
 
   return (
     <PageWrapper
-      title={order?.id}
-      breadcrumbs={[{ label: 'Orders', href: '/account/orders' }, { label: order?.id }]}
-      loading={loading}
+      title={order?.order_number || 'Order Details'}
+      breadcrumbs={[{ label: 'Orders', href: '/account/orders' }, { label: order?.order_number }]}
+      loading={isLoading}
     >
       {order && (
         <div className="grid lg:grid-cols-3 gap-6">
           <section className="lg:col-span-2 space-y-6">
             <article className="rounded-xl border border-border bg-card p-6">
               <header className="flex justify-between items-start mb-6">
-                <div>
-                  <p className="text-sm text-muted-foreground">Placed on {formatDate(order.date)}</p>
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Placed on {formatDate(order.created_at)}</p>
                   <StatusBadge status={order.status} />
                 </div>
-                {order.trackingNumber && (
-                  <p className="text-sm">Tracking: <span className="font-mono">{order.trackingNumber}</span></p>
-                )}
+                <div className="text-right">
+                  <p className="text-sm text-muted-foreground">Payment</p>
+                  <p className="text-sm font-medium">{order.payment_method}</p>
+                </div>
               </header>
-              <ul className="space-y-4">
-                {order.items.map((item, i) => (
-                  <li key={i} className="flex gap-4">
-                    <img src={item.image} alt={item.name} className="w-20 h-24 object-cover rounded-lg" />
-                    <div>
-                      <p className="font-medium">{item.name}</p>
-                      <p className="text-sm text-muted-foreground">{item.size} / {item.color} x{item.quantity}</p>
-                      <p className="font-medium mt-1">{formatCurrency(item.price * item.quantity)}</p>
+              <ul className="space-y-4 divide-y divide-border">
+                {order.items.map((item) => (
+                  <li key={item.id} className="flex gap-4 pt-4 first:pt-0">
+                    <div className="flex-1">
+                      <p className="font-medium">{item.product_name}</p>
+                      <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                      <p className="font-medium mt-1">{formatCurrency(item.line_total)}</p>
                     </div>
+                    <p className="text-sm text-muted-foreground">{formatCurrency(item.unit_price)} each</p>
                   </li>
                 ))}
               </ul>
             </article>
           </section>
-          <aside className="rounded-xl border border-border bg-card p-6 h-fit space-y-4">
-            <h3 className="font-heading tracking-wide">Summary</h3>
-            <div className="text-sm space-y-2">
-              <div className="flex justify-between"><span>Subtotal</span><span>{formatCurrency(order.subtotal)}</span></div>
-              <div className="flex justify-between text-muted-foreground"><span>Shipping</span><span>{formatCurrency(order.shipping)}</span></div>
-              <div className="flex justify-between text-muted-foreground"><span>Tax</span><span>{formatCurrency(order.tax)}</span></div>
-              <div className="flex justify-between font-semibold pt-2 border-t border-border">
-                <span>Total</span><span>{formatCurrency(order.total)}</span>
+
+          <aside className="space-y-4">
+            <section className="rounded-xl border border-border bg-card p-6 space-y-4">
+              <h3 className="font-heading tracking-wide">Order Summary</h3>
+              <div className="text-sm space-y-2">
+                <div className="flex justify-between"><span>Subtotal</span><span>{formatCurrency(order.subtotal)}</span></div>
+                <div className="flex justify-between text-muted-foreground"><span>Shipping</span><span>{formatCurrency(order.shipping_amount)}</span></div>
+                <div className="flex justify-between text-muted-foreground"><span>Tax</span><span>{formatCurrency(order.tax_amount)}</span></div>
+                {Number(order.discount_amount) > 0 && (
+                  <div className="flex justify-between text-green-600"><span>Discount</span><span>-{formatCurrency(order.discount_amount)}</span></div>
+                )}
+                <div className="flex justify-between font-semibold pt-2 border-t border-border">
+                  <span>Total</span><span>{formatCurrency(order.total_amount)}</span>
+                </div>
               </div>
-            </div>
-            <h4 className="font-medium text-sm pt-4">Shipping Address</h4>
-            <address className="text-sm text-muted-foreground not-italic">
-              {order.shippingAddress.name}<br />
-              {order.shippingAddress.street}<br />
-              {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.zip}
-            </address>
+            </section>
+
+            {order.shipping_address && (
+              <section className="rounded-xl border border-border bg-card p-6 space-y-2">
+                <h4 className="font-medium text-sm">Shipping Address</h4>
+                <address className="text-sm text-muted-foreground not-italic space-y-0.5">
+                  <p>{order.shipping_address.line1}</p>
+                  {order.shipping_address.line2 && <p>{order.shipping_address.line2}</p>}
+                  <p>
+                    {order.shipping_address.city}
+                    {order.shipping_address.state ? `, ${order.shipping_address.state}` : ''}
+                    {' '}{order.shipping_address.postal_code}
+                  </p>
+                  <p>{order.shipping_address.country}</p>
+                </address>
+              </section>
+            )}
+
+            {order.notes && (
+              <section className="rounded-xl border border-border bg-card p-6">
+                <h4 className="font-medium text-sm mb-2">Order Notes</h4>
+                <p className="text-sm text-muted-foreground">{order.notes}</p>
+              </section>
+            )}
+
+            <Link to="/account/orders">
+              <Button variant="outline" className="w-full">Back to Orders</Button>
+            </Link>
           </aside>
         </div>
       )}
     </PageWrapper>
   );
 }
-
