@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ShoppingBag } from 'lucide-react';
 import { PageWrapper } from '../components/common/PageWrapper';
 import { DataTable } from '../components/common/DataTable';
 import { EmptyState } from '../components/common/EmptyState';
 import { StatusBadge } from '../components/ui/Badge';
+import { Button } from '../components/ui/Button';
 import { usePageLoading } from '../hooks/usePageLoading';
 import { formatCurrency, formatDate } from '../lib/utils';
 import { adminApi } from '../lib/api';
 
 export default function AdminOrders() {
+  const navigate = useNavigate();
   const pageLoading = usePageLoading();
   const [orders, setOrders] = useState([]);
   const [total, setTotal] = useState(0);
@@ -52,20 +55,35 @@ export default function AdminOrders() {
           <DataTable
             columns={[
               { key: 'order_number', label: 'Order #' },
+              { key: 'buyer', label: 'Buyer' },
               { key: 'created_at', label: 'Date' },
               { key: 'status', label: 'Status' },
               { key: 'item_count', label: 'Items' },
               { key: 'total_amount', label: 'Total' },
+              { key: 'actions', label: '' },
             ]}
             data={orders}
             loading={isLoading}
             renderRow={(order) => (
               <>
                 <td className="p-4 font-mono text-sm">{order.order_number}</td>
+                <td className="p-4">
+                  <p className="text-sm font-medium">{order.buyer_name || '—'}</p>
+                  <p className="text-xs text-muted-foreground">{order.buyer_email}</p>
+                </td>
                 <td className="p-4 text-muted-foreground">{formatDate(order.created_at)}</td>
                 <td className="p-4"><StatusBadge status={order.status} /></td>
                 <td className="p-4">{order.item_count}</td>
                 <td className="p-4 font-medium">{formatCurrency(order.total_amount)}</td>
+                <td className="p-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate(`/admin/orders/${order.id}`)}
+                  >
+                    View
+                  </Button>
+                </td>
               </>
             )}
           />

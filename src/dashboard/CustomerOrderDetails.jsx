@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { Store } from 'lucide-react';
 import { PageWrapper } from '../components/common/PageWrapper';
 import { usePageLoading } from '../hooks/usePageLoading';
 import { formatCurrency, formatDate } from '../lib/utils';
@@ -46,6 +47,7 @@ export default function CustomerOrderDetails() {
     >
       {order && (
         <div className="grid lg:grid-cols-3 gap-6">
+          {/* Left: items */}
           <section className="lg:col-span-2 space-y-6">
             <article className="rounded-xl border border-border bg-card p-6">
               <header className="flex justify-between items-start mb-6">
@@ -58,21 +60,57 @@ export default function CustomerOrderDetails() {
                   <p className="text-sm font-medium">{order.payment_method}</p>
                 </div>
               </header>
-              <ul className="space-y-4 divide-y divide-border">
+
+              <ul className="space-y-6 divide-y divide-border">
                 {order.items.map((item) => (
-                  <li key={item.id} className="flex gap-4 pt-4 first:pt-0">
-                    <div className="flex-1">
-                      <p className="font-medium">{item.product_name}</p>
-                      <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
-                      <p className="font-medium mt-1">{formatCurrency(item.line_total)}</p>
+                  <li key={item.id} className="flex gap-4 pt-6 first:pt-0">
+                    {/* Product image */}
+                    {item.product_image_url ? (
+                      <img
+                        src={item.product_image_url}
+                        alt={item.product_name}
+                        className="w-20 h-20 rounded-lg object-cover border border-border flex-shrink-0"
+                      />
+                    ) : (
+                      <div className="w-20 h-20 rounded-lg border border-border bg-muted flex items-center justify-center flex-shrink-0">
+                        <Store className="w-6 h-6 text-muted-foreground" />
+                      </div>
+                    )}
+
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium leading-snug">{item.product_name}</p>
+
+                      {/* Seller */}
+                      {item.seller_name && (
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Sold by{' '}
+                          {item.seller_slug ? (
+                            <Link
+                              to={`/store/${item.seller_slug}`}
+                              className="text-foreground hover:underline font-medium"
+                            >
+                              {item.seller_name}
+                            </Link>
+                          ) : (
+                            <span className="font-medium">{item.seller_name}</span>
+                          )}
+                        </p>
+                      )}
+
+                      <div className="flex items-center gap-4 mt-2 text-sm">
+                        <span className="text-muted-foreground">Qty: {item.quantity}</span>
+                        <span className="text-muted-foreground">{formatCurrency(item.unit_price)} each</span>
+                      </div>
                     </div>
-                    <p className="text-sm text-muted-foreground">{formatCurrency(item.unit_price)} each</p>
+
+                    <p className="font-semibold text-sm whitespace-nowrap">{formatCurrency(item.line_total)}</p>
                   </li>
                 ))}
               </ul>
             </article>
           </section>
 
+          {/* Right sidebar */}
           <aside className="space-y-4">
             <section className="rounded-xl border border-border bg-card p-6 space-y-4">
               <h3 className="font-heading tracking-wide">Order Summary</h3>

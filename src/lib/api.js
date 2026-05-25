@@ -210,6 +210,12 @@ export const adminApi = {
     const query = q.toString();
     return apiRequest(`/admin/orders${query ? `?${query}` : ''}`);
   },
+  getOrder: (id) => apiRequest(`/admin/orders/${id}`),
+  updateOrderStatus: (id, status) =>
+    apiRequest(`/admin/orders/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    }),
 };
 
 export const wishlistApi = {
