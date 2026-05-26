@@ -8,12 +8,14 @@ import { sellerProductsApi } from '../lib/api';
 import { mapApiProduct } from '../lib/product-mapper';
 import { formatCurrency } from '../lib/utils';
 import { useToast } from '../context/ToastContext';
-import { Plus } from 'lucide-react';
+import { Info, Plus } from 'lucide-react';
 
 export default function SellerProducts() {
   const { addToast } = useToast();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const pendingCount = products.filter((p) => p.status === 'pending').length;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -44,6 +46,16 @@ export default function SellerProducts() {
         </Link>
       }
     >
+      {pendingCount > 0 && (
+        <div className="flex items-start gap-2 rounded-lg border border-amber-300/80 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/40 px-4 py-3 mb-4 text-sm text-amber-800 dark:text-amber-200">
+          <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
+          <span>
+            {pendingCount} product{pendingCount !== 1 ? 's are' : ' is'} awaiting admin review
+            and will be published once approved.
+          </span>
+        </div>
+      )}
+
       {products.length === 0 && !loading ? (
         <section className="rounded-xl border border-border bg-card p-6">
           <p className="text-muted-foreground text-sm mb-4">

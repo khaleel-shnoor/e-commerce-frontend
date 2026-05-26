@@ -5,14 +5,17 @@ import { Input } from '../components/ui/Input';
 import { Textarea } from '../components/ui/Textarea';
 import { Select } from '../components/ui/Select';
 import { Button } from '../components/ui/Button';
+import { StatusBadge } from '../components/ui/Badge';
 import { useToast } from '../context/ToastContext';
 import { categoriesApi, sellerProductsApi } from '../lib/api';
 
-const statusOptions = [
-  { value: 'draft', label: 'Draft' },
-  { value: 'active', label: 'Active' },
-  { value: 'inactive', label: 'Inactive' },
-  { value: 'archived', label: 'Archived' },
+// Sellers cannot self-approve. Only draft/pending/inactive are writable.
+// If the product is currently active (admin-approved), the seller sees a read-only
+// status badge and cannot demote it below inactive via this form.
+const SELLER_STATUS_OPTIONS = [
+  { value: 'draft', label: 'Draft (hidden)' },
+  { value: 'pending', label: 'Submit for Review' },
+  { value: 'inactive', label: 'Inactive (paused)' },
 ];
 
 export default function SellerEditProduct() {
@@ -130,13 +133,34 @@ export default function SellerEditProduct() {
               min="0"
               defaultValue={product.quantity_available ?? 0}
             />
-            <Select
-              label="Status"
-              name="status"
-              options={statusOptions}
-              defaultValue={product.status}
-            />
+            {product.status === 'active' ? (
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-foreground">Status</p>
+                <div className="flex items-center gap-2 h-9">
+                  <StatusBadge status="active" />
+                  <span className="text-xs text-muted-foreground">(admin-approved)</span>
+                </div>
+                <input type="hidden" name="status" value="active" />
+              </div>
+            ) : (
+              <Select
+                label="Status"
+                name="status"
+                options={SELLER_STATUS_OPTIONS}
+                defaultValue={
+                  SELLER_STATUS_OPTIONS.some((o) => o.value === product.status)
+                    ? product.status
+                    : 'draft'
+                }
+              />
+            )}
           </div>
+          {product.status === 'pending' && (
+            <p className="text-xs text-amber-700 dark:text-amber-300 rounded-lg border border-amber-300/80 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/40 px-3 py-2">
+              This product is awaiting admin review. Saving changes will not affect its pending
+              status unless you change it to Draft.
+            </p>
+          )}
           <Select
             label="Category"
             name="category_id"

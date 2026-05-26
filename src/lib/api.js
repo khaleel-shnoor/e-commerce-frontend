@@ -216,6 +216,21 @@ export const adminApi = {
       method: 'PATCH',
       body: JSON.stringify({ status }),
     }),
+  listProducts: (params = {}) => {
+    const q = new URLSearchParams();
+    if (params.status) q.set('status', params.status);
+    if (params.search) q.set('search', params.search);
+    if (params.limit != null) q.set('limit', String(params.limit));
+    if (params.offset != null) q.set('offset', String(params.offset));
+    const query = q.toString();
+    return apiRequest(`/admin/products${query ? `?${query}` : ''}`);
+  },
+  getProduct: (id) => apiRequest(`/admin/products/${id}`),
+  updateProductStatus: (productId, status) =>
+    apiRequest(`/admin/products/${productId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    }),
 };
 
 export const wishlistApi = {

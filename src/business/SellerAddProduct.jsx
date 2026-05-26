@@ -9,8 +9,8 @@ import { useToast } from '../context/ToastContext';
 import { categoriesApi, sellerProductsApi } from '../lib/api';
 
 const statusOptions = [
-  { value: 'draft', label: 'Draft (hidden)' },
-  { value: 'active', label: 'Active (visible to customers)' },
+  { value: 'pending', label: 'Submit for Review (recommended)' },
+  { value: 'draft', label: 'Save as Draft (hidden)' },
 ];
 
 export default function SellerAddProduct() {
@@ -98,7 +98,7 @@ export default function SellerAddProduct() {
             defaultValue="0"
             required
           />
-          <Select label="Status" name="status" options={statusOptions} defaultValue="draft" />
+          <Select label="Status" name="status" options={statusOptions} defaultValue="pending" />
         </div>
         <Select
           label="Category"
@@ -128,6 +128,11 @@ export default function SellerAddProduct() {
             />
           )}
         </div>
+
+        <p className="text-xs text-muted-foreground rounded-lg border border-border bg-muted/40 px-3 py-2">
+          Products submitted for review are visible to the Root Admin and published to the
+          storefront only after approval. Drafts are saved privately and can be submitted later.
+        </p>
 
         <Button type="submit" className="w-full" disabled={submitting}>
           {submitting ? 'Uploading…' : 'Create Product'}

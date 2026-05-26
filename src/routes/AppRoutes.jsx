@@ -59,6 +59,7 @@ import AdminDashboard from '../admin/AdminDashboard';
 import AdminUsers from '../admin/AdminUsers';
 import AdminSellers from '../admin/AdminSellers';
 import AdminProducts from '../admin/AdminProducts';
+import AdminProductDetail from '../admin/AdminProductDetail';
 import AdminOrders from '../admin/AdminOrders';
 import AdminOrderDetail from '../admin/AdminOrderDetail';
 import AdminTransactions from '../admin/AdminTransactions';
@@ -162,6 +163,7 @@ export function AppRoutes() {
         <Route path="users" element={<AdminUsers />} />
         <Route path="sellers" element={<AdminSellers />} />
         <Route path="products" element={<AdminProducts />} />
+        <Route path="products/:id" element={<AdminProductDetail />} />
         <Route path="orders" element={<AdminOrders />} />
         <Route path="orders/:id" element={<AdminOrderDetail />} />
         <Route path="transactions" element={<AdminTransactions />} />
