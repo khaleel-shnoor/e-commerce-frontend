@@ -162,6 +162,10 @@ export const productsApi = {
     return apiRequest(`/products${query ? `?${query}` : ''}`, { auth: false });
   },
   get: (identifier) => apiRequest(`/products/${identifier}`, { auth: false }),
+  related: (identifier, limit = 4) =>
+    apiRequest(`/products/${identifier}/related?limit=${limit}`, { auth: false }),
+  recommendations: (limit = 8) =>
+    apiRequest(`/products/recommendations?limit=${limit}`),
 };
 
 export const categoriesApi = {

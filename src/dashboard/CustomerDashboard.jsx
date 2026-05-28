@@ -1,12 +1,16 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Package, Heart, MapPin, Ticket } from 'lucide-react';
 import { PageWrapper } from '../components/common/PageWrapper';
 import { StatsCard } from '../components/common/StatsCard';
+import { ProductCard } from '../components/product/ProductCard';
 import { usePageLoading } from '../hooks/usePageLoading';
 import { orders } from '../data/orders';
 import { useCart } from '../context/CartContext';
 import { formatCurrency, formatDate } from '../lib/utils';
 import { StatusBadge } from '../components/ui/Badge';
+import { productsApi } from '../lib/api';
+import { mapApiProduct } from '../lib/product-mapper';
 
 const quickLinks = [
   { to: '/account/orders', label: 'Orders', icon: Package },
@@ -19,6 +23,15 @@ export default function CustomerDashboard() {
   const loading = usePageLoading();
   const { itemCount, wishlist } = useCart();
   const recentOrders = orders.slice(0, 3);
+
+  const [recommendations, setRecommendations] = useState([]);
+
+  useEffect(() => {
+    productsApi
+      .recommendations()
+      .then((data) => setRecommendations((data.items || []).map(mapApiProduct)))
+      .catch(() => {});
+  }, []);
 
   return (
     <PageWrapper title="Dashboard" subtitle="Welcome back" loading={loading}>
@@ -42,7 +55,7 @@ export default function CustomerDashboard() {
         ))}
       </div>
 
-      <section className="rounded-xl border border-border bg-card p-6">
+      <section className="rounded-xl border border-border bg-card p-6 mb-8">
         <h3 className="font-heading text-lg tracking-wide mb-4">Recent Orders</h3>
         <ul className="space-y-4">
           {recentOrders.map((order) => (
@@ -61,7 +74,17 @@ export default function CustomerDashboard() {
           ))}
         </ul>
       </section>
+
+      {recommendations.length > 0 && (
+        <section>
+          <h3 className="font-heading text-lg tracking-wide mb-4">Recommended For You</h3>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            {recommendations.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+        </section>
+      )}
     </PageWrapper>
   );
 }
-

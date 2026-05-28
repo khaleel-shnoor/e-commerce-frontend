@@ -30,16 +30,8 @@ export default function ProductDetailsPage() {
         const mapped = mapApiProduct(data);
         setProduct(mapped);
 
-        const list = await productsApi.list({
-          category_id: data.category_id || undefined,
-          limit: 8,
-        });
-        setRelated(
-          (list.items || [])
-            .map(mapApiProduct)
-            .filter((p) => p.id !== mapped.id)
-            .slice(0, 4),
-        );
+        const list = await productsApi.related(identifier);
+        setRelated((list.items || []).map(mapApiProduct));
       } catch {
         setProduct(null);
         setRelated([]);
